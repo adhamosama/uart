@@ -1,26 +1,5 @@
 `timescale 1ns / 1ps
 
-////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer:
-//
-// Create Date:   18:17:50 06/22/2020
-// Design Name:   UART_Rx
-// Module Name:   D:/Digital Projects/UART/tb_uart_2.v
-// Project Name:  UART
-// Target Device:  
-// Tool versions:  
-// Description: 
-//
-// Verilog Test Fixture created by ISE for module: UART_Rx
-//
-// Dependencies:
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-////////////////////////////////////////////////////////////////////////////////
 
 module tb_uart_2;
 
@@ -63,17 +42,24 @@ module tb_uart_2;
 		clk <= !clk;
 	end
 	
+	// Task to send byte and check if it's received correctly
 	task Send_Byte;
 		input [7:0] data;
 		begin
+		
+			// set data to Tx input port
 			Tx_input <= data;
+			
+			// send start sending signal
 			@(posedge clk);
 			start_sending <= 1;
 			@(posedge clk);
 			start_sending <= 0;
 		
+			// wait for first clock edge after Tx's done
 			@(done);
 			@(posedge clk);
+			
 			// Check that the correct byte was received
 			if (data_out == data)
 				$display("Test Passed - %b Received Correctly", data);
