@@ -17,7 +17,10 @@ parameter IDLE = 3'b000;
 parameter START_BIT = 3'b001;
 parameter DATA_BITS = 3'b010;
 parameter STOP_BIT = 3'b011;
-parameter FINISHED = 3'b100;
+parameter PARITY_BIT = 3'b100;
+parameter FINISHED = 3'b101;
+
+wire parity;
 
 reg [2:0] current_state = IDLE;
 reg [7:0] data_to_send;
@@ -96,6 +99,20 @@ begin
 				current_state <= STOP_BIT;
 			end
 			else begin
+			current_state <= PARITY_BIT;
+			number_of_clks <= 0;
+			busy <= 0;
+			done <= 0;
+			end
+		end
+		
+		PARITY_BIT: begin
+			data_out <= parity;
+			if (number_of_clks < CLKs_per_bit - 1) begin
+				number_of_clks <= number_of_clks + 1;
+				current_state <= PARITY_BIT;
+			end
+			else begin
 			current_state <= FINISHED;
 			number_of_clks <= 0;
 			busy <= 0;
@@ -117,6 +134,8 @@ begin
 
 
 end
+
+assign parity = ~^data_to_send; 
 
 endmodule
 

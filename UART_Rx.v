@@ -15,7 +15,8 @@ parameter IDLE = 3'b000;
 parameter START_BIT = 3'b001;
 parameter DATA_BITS = 3'b010;
 parameter STOP_BIT = 3'b011;
-parameter FINISHED = 3'b100;
+parameter PARITY_BIT = 3'b100;
+parameter FINISHED = 3'b101;
 
 reg [2:0] current_state = IDLE;
 reg [7:0] data_received;
@@ -106,6 +107,27 @@ begin
 				end
 			end
 			else begin
+				current_state <= PARITY_BIT;
+				number_of_clks <= 0;
+				//data_out <= data_received;
+			end
+		end
+		
+		PARITY_BIT: begin
+		if (number_of_clks < CLKs_per_bit - 2) begin
+				//if parity bit is still not finished, check it's still found
+				if (data_in == parity) begin
+					number_of_clks <= number_of_clks + 1;
+					current_state <= PARITY_BIT;
+				end
+				else begin
+					// if the parity bit is not found for the whole CLKs_per_bit period
+					// or its value is wrong
+					// then there is an error and return to IDLE state
+					current_state <= IDLE;
+				end
+			end
+			else begin
 				current_state <= FINISHED;
 				data_out <= data_received;
 				done <= 1;
@@ -125,6 +147,8 @@ begin
 	endcase
 
 end
+
+assign parity = ~^data_received;
 
 endmodule
 
